@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title description">
+  <title id="title">Topscore Learning</title>
+  <desc id="description">Building better ways to learn, assess and improve.</desc>
+  <rect width="1200" height="630" fill="#0c3436"/>
+  <circle cx="1050" cy="80" r="260" fill="none" stroke="#fff" stroke-opacity=".06" stroke-width="85"/>
+  <circle cx="80" cy="620" r="190" fill="#12706c" fill-opacity=".45"/>
+  <rect x="88" y="92" width="68" height="68" rx="12" fill="#fff"/>
+  <text x="122" y="139" text-anchor="middle" font-family="Arial, sans-serif" font-size="28" font-weight="700" fill="#0f4c4c">T</text>
+  <text x="180" y="138" font-family="Arial, sans-serif" font-size="32" font-weight="700" fill="#fff">Topscore Learning</text>
+  <text x="88" y="290" font-family="Arial, sans-serif" font-size="64" font-weight="700" fill="#fff">Building better ways to</text>
+  <text x="88" y="370" font-family="Arial, sans-serif" font-size="64" font-weight="700" fill="#d7efec">learn, assess and improve.</text>
+  <text x="88" y="485" font-family="Arial, sans-serif" font-size="24" fill="#cbd5e1">Assessment • Research • Technology • Professional Learning</text>
+</svg>
