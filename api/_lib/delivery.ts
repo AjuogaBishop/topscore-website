@@ -1,4 +1,4 @@
-import type { EnquiryFormValues } from '../../src/components/forms/formSchemas'
+import type { EnquiryFormValues } from '../../src/components/forms/formSchemas.js'
 
 export type DeliveryPayload = EnquiryFormValues & {
   submittedAt: string
