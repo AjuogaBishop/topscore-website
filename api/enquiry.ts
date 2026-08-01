@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import type { IncomingMessage, ServerResponse } from 'node:http'
 
 const serverEnquirySchema = z.object({
   formType: z.enum(['general-contact', 'peer-demo', 'academy-interest', 'consulting-enquiry']),
@@ -126,47 +127,65 @@ async function deliverEnquiry(payload: DeliveryPayload) {
   return response.ok ? { ok: true as const } : { ok: false as const, reason: 'provider-rejected' as const, status: response.status }
 }
 
-function json(data: unknown, status = 200, headers: HeadersInit = {}) {
-  return new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json', ...headers } })
+type ApiRequest = IncomingMessage & { body?: unknown }
+
+function json(response: ServerResponse, data: unknown, status = 200, headers: Record<string, string> = {}) {
+  response.statusCode = status
+  response.setHeader('Content-Type', 'application/json')
+  for (const [name, value] of Object.entries(headers)) response.setHeader(name, value)
+  response.end(JSON.stringify(data))
 }
 
-function getRemoteIp(request: Request) {
-  return request.headers.get('x-vercel-forwarded-for')?.split(',')[0]?.trim()
-    || request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+function firstHeaderValue(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value
+}
+
+function getRemoteIp(request: ApiRequest) {
+  return firstHeaderValue(request.headers['x-vercel-forwarded-for'])?.split(',')[0]?.trim()
+    || firstHeaderValue(request.headers['x-forwarded-for'])?.split(',')[0]?.trim()
     || 'unknown'
 }
 
-export default async function handler(request: Request) {
-  if (request.method !== 'POST') return json({ ok: false, message: 'Method not allowed.' }, 405, { Allow: 'POST' })
+async function readRequestBody(request: ApiRequest) {
+  if (request.body !== undefined) {
+    return typeof request.body === 'string' ? JSON.parse(request.body) : request.body
+  }
+  const chunks: Uint8Array[] = []
+  for await (const chunk of request) chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk)
+  return JSON.parse(Buffer.concat(chunks).toString('utf8'))
+}
 
-  const contentLength = Number(request.headers.get('content-length') || 0)
-  if (contentLength > 20_000) return json({ ok: false, message: 'The enquiry is too large.' }, 413)
+export default async function handler(request: ApiRequest, response: ServerResponse) {
+  if (request.method !== 'POST') return json(response, { ok: false, message: 'Method not allowed.' }, 405, { Allow: 'POST' })
+
+  const contentLength = Number(firstHeaderValue(request.headers['content-length']) || 0)
+  if (contentLength > 20_000) return json(response, { ok: false, message: 'The enquiry is too large.' }, 413)
 
   const remoteIp = getRemoteIp(request)
   const rateLimit = checkRateLimit(remoteIp)
-  if (!rateLimit.allowed) return json({ ok: false, message: 'Too many enquiries have been submitted. Please try again later.' }, 429, { 'Retry-After': String(rateLimit.retryAfter) })
+  if (!rateLimit.allowed) return json(response, { ok: false, message: 'Too many enquiries have been submitted. Please try again later.' }, 429, { 'Retry-After': String(rateLimit.retryAfter) })
 
   let input: unknown
   try {
-    input = await request.json()
+    input = await readRequestBody(request)
   } catch {
-    return json({ ok: false, message: 'Invalid request.' }, 400)
+    return json(response, { ok: false, message: 'Invalid request.' }, 400)
   }
 
   if (input && typeof input === 'object' && 'website' in input && typeof input.website === 'string' && input.website.length > 0) {
-    return json({ ok: true })
+    return json(response, { ok: true })
   }
 
   const parsed = serverEnquirySchema.safeParse(input)
   if (!parsed.success) {
-    return json({ ok: false, message: 'Please review the highlighted fields.', fieldErrors: parsed.error.flatten().fieldErrors }, 400)
+    return json(response, { ok: false, message: 'Please review the highlighted fields.', fieldErrors: parsed.error.flatten().fieldErrors }, 400)
   }
 
   const turnstileValid = await verifyTurnstile(parsed.data.turnstileToken, remoteIp)
-  if (!turnstileValid) return json({ ok: false, message: 'The anti-spam check could not be verified. Please try again.' }, 400)
+  if (!turnstileValid) return json(response, { ok: false, message: 'The anti-spam check could not be verified. Please try again.' }, 400)
 
   const delivery = await deliverEnquiry({ ...parsed.data, receivedAt: new Date().toISOString() })
-  if (!delivery.ok) return json({ ok: false, message: 'The enquiry could not be delivered. Please try again or contact us by email.' }, 503)
+  if (!delivery.ok) return json(response, { ok: false, message: 'The enquiry could not be delivered. Please try again or contact us by email.' }, 503)
 
-  return json({ ok: true })
+  return json(response, { ok: true })
 }
