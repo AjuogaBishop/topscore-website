@@ -1,4 +1,4 @@
-import type { EnquiryFormValues } from '../components/forms/formSchemas'
+import type { EnquiryFormValues } from '../../shared/enquirySchema'
 
 export type FormSubmissionResult = { ok: true } | { ok: false; message: string; fieldErrors?: Record<string, string[]> }
 

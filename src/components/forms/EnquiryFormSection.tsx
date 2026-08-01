@@ -1,4 +1,4 @@
-import type { EnquiryFormType } from './formSchemas'
+import type { EnquiryFormType } from '../../../shared/enquirySchema'
 import { EnquiryForm } from './EnquiryForm'
 import { Container } from '../ui/Container'
 
