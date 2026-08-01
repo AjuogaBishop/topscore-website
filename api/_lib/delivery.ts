@@ -1,4 +1,4 @@
-import type { EnquiryFormValues } from '../../src/components/forms/formSchemas.ts'
+import type { EnquiryFormValues } from '../../src/components/forms/formSchemas'
 
 export type DeliveryPayload = EnquiryFormValues & {
   submittedAt: string

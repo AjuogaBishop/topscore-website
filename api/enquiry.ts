@@ -1,8 +1,8 @@
 import { z } from 'zod'
-import { enquirySchema } from '../src/components/forms/formSchemas.ts'
-import { deliverEnquiry } from './_lib/delivery.ts'
-import { checkRateLimit } from './_lib/rateLimit.ts'
-import { verifyTurnstile } from './_lib/turnstile.ts'
+import { enquirySchema } from '../src/components/forms/formSchemas'
+import { deliverEnquiry } from './_lib/delivery'
+import { checkRateLimit } from './_lib/rateLimit'
+import { verifyTurnstile } from './_lib/turnstile'
 
 const serverEnquirySchema = enquirySchema.extend({ submittedAt: z.string().datetime() })
 
