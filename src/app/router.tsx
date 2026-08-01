@@ -1,9 +1,11 @@
 import { createBrowserRouter } from 'react-router-dom'
 import { PageLayout } from '../components/layout/PageLayout'
+import { RouteHydrationFallback } from '../components/layout/RouteHydrationFallback'
 
 export const router = createBrowserRouter([
   {
     element: <PageLayout />,
+    HydrateFallback: RouteHydrationFallback,
     children: [
       { path: '/', lazy: async () => ({ Component: (await import('../pages/HomePage')).HomePage }) },
       { path: '/about', lazy: async () => ({ Component: (await import('../pages/AboutPage')).AboutPage }) },
