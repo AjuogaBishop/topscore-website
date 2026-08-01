@@ -1,10 +1,34 @@
 import { z } from 'zod'
-import { enquirySchema } from '../shared/enquirySchema.js'
 import { deliverEnquiry } from './_lib/delivery.js'
 import { checkRateLimit } from './_lib/rateLimit.js'
 import { verifyTurnstile } from './_lib/turnstile.js'
 
-const serverEnquirySchema = enquirySchema.extend({ submittedAt: z.string().datetime() })
+const serverEnquirySchema = z.object({
+  formType: z.enum(['general-contact', 'peer-demo', 'academy-interest', 'consulting-enquiry']),
+  fullName: z.string().trim().min(2).max(120),
+  email: z.string().trim().email().max(254),
+  organisation: z.string().trim().min(2).max(160),
+  role: z.string().trim().min(2).max(120),
+  country: z.string().trim().min(2).max(120),
+  enquiryType: z.enum([
+    'General enquiry',
+    'PEER demo',
+    'PEER institutional pilot',
+    'Academy programme',
+    'Consulting',
+    'Research collaboration',
+    'Media or speaking request',
+    'Privacy request',
+  ]),
+  message: z.string().trim().min(20).max(5000),
+  consent: z.literal(true),
+  phone: z.string().trim().max(120).optional().or(z.literal('')),
+  preferredContactMethod: z.enum(['Email', 'Phone']).optional().or(z.literal('')),
+  pageSource: z.string().trim().max(500),
+  website: z.string().max(0),
+  turnstileToken: z.string().optional(),
+  submittedAt: z.string().datetime(),
+})
 
 function json(data: unknown, status = 200, headers: HeadersInit = {}) {
   return new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json', ...headers } })
